@@ -1,22 +1,103 @@
-import React from 'react';
-import { Typography, Paper, Box } from '@mui/material';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Typography, Paper, Box, Grid, CircularProgress } from '@mui/material';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import dayjs from 'dayjs';
+import { supabase } from '../supabaseClient';
 
-export default function AdminDashboard() {
+// Helper component for displaying counts
+function CountCard({ title, count, loading }) {
   return (
-    <Box>
-      <Typography variant="h4" gutterBottom>
-        Admin Dashboard
+    <Paper elevation={3} sx={{ p: 3, textAlign: 'center' }}>
+      <Typography variant="h6" color="text.secondary" gutterBottom>
+        {title}
       </Typography>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h6" gutterBottom>
-          Welcome, Admin!
+      {loading ? (
+        <CircularProgress />
+      ) : (
+        <Typography variant="h3" component="p" color="primary">
+          {count}
         </Typography>
-        <Typography variant="body1">
-          This is the secure dashboard for Karmic Kitchen Administrators. 
-          The main dashboard for viewing meal confirmations will be here.
-        </Typography>
-      </Paper>
-    </Box>
+      )}
+    </Paper>
   );
 }
 
+export default function AdminDashboard() {
+  const [selectedDate, setSelectedDate] = useState(dayjs());
+  const [counts, setCounts] = useState({ breakfast: 0, lunch: 0, snack: 0 });
+  const [loading, setLoading] = useState(true);
+
+  const fetchCounts = useCallback(async (date) => {
+    setLoading(true);
+    const dateString = date.format('YYYY-MM-DD');
+
+    try {
+      const { data, error } = await supabase
+        .from('confirmations')
+        .select('opt_in_breakfast, opt_in_lunch, opt_in_snack')
+        .eq('menu_date', dateString);
+
+      if (error) throw error;
+
+      const totals = data.reduce(
+        (acc, row) => {
+          acc.breakfast += row.opt_in_breakfast ? 1 : 0;
+          acc.lunch += row.opt_in_lunch ? 1 : 0;
+          acc.snack += row.opt_in_snack ? 1 : 0;
+          return acc;
+        },
+        { breakfast: 0, lunch: 0, snack: 0 }
+      );
+
+      setCounts(totals);
+    } catch (error) {
+      console.error('Error fetching confirmation counts:', error.message);
+      setCounts({ breakfast: 0, lunch: 0, snack: 0 });
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCounts(selectedDate);
+  }, [selectedDate, fetchCounts]);
+
+  return (
+    <Box>
+      <Box 
+        sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 3,
+          flexWrap: 'wrap',
+          gap: 2
+        }}
+      >
+        <Typography variant="h4" gutterBottom sx={{ mb: 0 }}>
+          Admin Dashboard
+        </Typography>
+        <DatePicker
+          label="Select Date"
+          value={selectedDate}
+          onChange={(newValue) => setSelectedDate(newValue)}
+          sx={{ minWidth: 240 }}
+        />
+      </Box>
+      <Typography variant="h5" gutterBottom>
+        Meal Confirmations for: {selectedDate.format('MMMM D, YYYY')}
+      </Typography>
+      <Grid container spacing={3}>
+        <Grid item xs={12} md={4}>
+          <CountCard title="Breakfast" count={counts.breakfast} loading={loading} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CountCard title="Lunch" count={counts.lunch} loading={loading} />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <CountCard title="Snack" count={counts.snack} loading={loading} />
+        </Grid>
+      </Grid>
+    </Box>
+  );
+}

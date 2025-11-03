@@ -6,7 +6,10 @@ import AdminDashboard from './AdminDashboard';
 import EmployeeDashboard from './EmployeeDashboard';
 import LoadingScreen from '../components/LoadingScreen';
 
-// This component fetches the user's role and directs them to the correct dashboard.
+// Import the new Admin pages
+import DailyMenuPlanner from './DailyMenuPlanner';
+import WeeklyTemplates from './WeeklyTemplates';
+
 function ProtectedRouter({ session }) {
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -21,7 +24,7 @@ function ProtectedRouter({ session }) {
           .from('profiles')
           .select('role, full_name, email')
           .eq('id', user.id)
-          .single(); // We only expect one row
+          .single();
 
         if (error && status !== 406) {
           throw error;
@@ -44,8 +47,6 @@ function ProtectedRouter({ session }) {
     return <LoadingScreen />;
   }
 
-  // Once we have the profile, we render the layout and routes.
-  // The layout will contain the AppBar and navigation.
   return (
     <AppLayout userProfile={profile}>
       <Routes>
@@ -53,13 +54,13 @@ function ProtectedRouter({ session }) {
           <>
             {/* Admin-specific routes */}
             <Route path="/" element={<AdminDashboard />} />
-            {/* We will add /menu here in the next step */}
+            <Route path="/menu" element={<DailyMenuPlanner />} />
+            <Route path="/templates" element={<WeeklyTemplates />} />
           </>
         ) : (
           <>
             {/* Employee-specific routes */}
             <Route path="/" element={<EmployeeDashboard />} />
-            {/* We will add /my-orders here later */}
           </>
         )}
         {/* A fallback route for any unknown paths */}
@@ -70,4 +71,3 @@ function ProtectedRouter({ session }) {
 }
 
 export default ProtectedRouter;
-

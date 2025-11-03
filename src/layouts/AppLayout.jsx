@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { supabase } from '../supabaseClient';
+import { Link as RouterLink } from 'react-router-dom';
 import { 
   AppBar, Toolbar, Typography, Button, Box, 
   Container, IconButton, Menu, MenuItem, Avatar
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
-import MenuIcon from '@mui/icons-material/Menu'; // for mobile
+import MenuIcon from '@mui/icons-material/Menu'; 
 
-// We will add navigation links here
-const employeeNav = [
-  { name: 'Today\'s Menu', path: '/' },
-  // { name: 'My Selections', path: '/my-selections' }, // Future step
-];
-
+// Updated Admin Navigation
 const adminNav = [
   { name: 'Dashboard', path: '/' },
-  { name: 'Menu Management', path: '/menu' }, // Future step
-  // { name: 'Analytics', path: '/analytics' }, // Future step
+  { name: 'Daily Menu', path: '/menu' }, 
+  { name: 'Templates', path: '/templates' },
+];
+
+const employeeNav = [
+  { name: 'Today\'s Menu', path: '/' },
 ];
 
 
@@ -43,7 +43,6 @@ export default function AppLayout({ userProfile, children }) {
     <Box sx={{ display: 'flex' }}>
       <AppBar position="fixed">
         <Toolbar>
-          {/* Mobile Menu Icon */}
           <IconButton
             color="inherit"
             aria-label="open drawer"
@@ -60,7 +59,12 @@ export default function AppLayout({ userProfile, children }) {
           {/* Desktop Nav Links */}
           <Box sx={{ display: { xs: 'none', sm: 'block' } }}>
             {navItems.map((item) => (
-              <Button key={item.name} color="inherit">
+              <Button
+                key={item.name}
+                color="inherit"
+                component={RouterLink}
+                to={item.path}
+              >
                 {item.name}
               </Button>
             ))}
@@ -105,11 +109,11 @@ export default function AppLayout({ userProfile, children }) {
       {/* Main content area */}
       <Container
         component="main"
-        maxWidth="xl" // Use xl for more space
+        maxWidth="xl" 
         sx={{
           flexGrow: 1,
           p: 3,
-          marginTop: '64px', // Offset for the AppBar
+          marginTop: '64px', 
         }}
       >
         {children}
@@ -117,4 +121,3 @@ export default function AppLayout({ userProfile, children }) {
     </Box>
   );
 }
-
