@@ -22,7 +22,7 @@ function ProtectedRouter({ session }) {
       try {
         const { data, error, status } = await supabase
           .from('profiles')
-          .select('role, full_name, email')
+          .select('role, full_name, email, work_location') // Added work_location
           .eq('id', user.id)
           .single();
 
@@ -47,8 +47,9 @@ function ProtectedRouter({ session }) {
     return <LoadingScreen />;
   }
 
+  // Pass the full profile (including work_location) and updater to AppLayout
   return (
-    <AppLayout userProfile={profile}>
+    <AppLayout userProfile={profile} setUserProfile={setProfile}>
       <Routes>
         {profile?.role === 'admin' ? (
           <>

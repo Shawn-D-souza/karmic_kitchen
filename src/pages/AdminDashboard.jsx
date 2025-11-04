@@ -24,7 +24,7 @@ function CountCard({ title, count, loading }) {
 
 export default function AdminDashboard() {
   const [selectedDate, setSelectedDate] = useState(dayjs());
-  const [counts, setCounts] = useState({ breakfast: 0, lunch: 0, snack: 0 });
+  const [counts, setCounts] = useState({ breakfast: 0, lunch: 0, snack: 0, dinner: 0 });
   const [loading, setLoading] = useState(true);
 
   const fetchCounts = useCallback(async (date) => {
@@ -34,7 +34,7 @@ export default function AdminDashboard() {
     try {
       const { data, error } = await supabase
         .from('confirmations')
-        .select('opt_in_breakfast, opt_in_lunch, opt_in_snack')
+        .select('opt_in_breakfast, opt_in_lunch, opt_in_snack, opt_in_dinner')
         .eq('menu_date', dateString);
 
       if (error) throw error;
@@ -44,15 +44,16 @@ export default function AdminDashboard() {
           acc.breakfast += row.opt_in_breakfast ? 1 : 0;
           acc.lunch += row.opt_in_lunch ? 1 : 0;
           acc.snack += row.opt_in_snack ? 1 : 0;
+          acc.dinner += row.opt_in_dinner ? 1 : 0; // Added dinner
           return acc;
         },
-        { breakfast: 0, lunch: 0, snack: 0 }
+        { breakfast: 0, lunch: 0, snack: 0, dinner: 0 } // Added dinner
       );
 
       setCounts(totals);
     } catch (error) {
       console.error('Error fetching confirmation counts:', error.message);
-      setCounts({ breakfast: 0, lunch: 0, snack: 0 });
+      setCounts({ breakfast: 0, lunch: 0, snack: 0, dinner: 0 });
     } finally {
       setLoading(false);
     }
@@ -88,14 +89,17 @@ export default function AdminDashboard() {
         Meal Confirmations for: {selectedDate.format('MMMM D, YYYY')}
       </Typography>
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <CountCard title="Breakfast" count={counts.breakfast} loading={loading} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <CountCard title="Lunch" count={counts.lunch} loading={loading} />
         </Grid>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} sm={6} md={3}>
           <CountCard title="Snack" count={counts.snack} loading={loading} />
+        </Grid>
+        <Grid item xs={12} sm={6} md={3}>
+          <CountCard title="Dinner" count={counts.dinner} loading={loading} />
         </Grid>
       </Grid>
     </Box>

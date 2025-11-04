@@ -12,6 +12,7 @@ const initialMenu = {
   item_breakfast: '',
   item_lunch: '',
   item_snack: '',
+  item_dinner: '', // Added dinner
 };
 
 export default function DailyMenuPlanner() {
@@ -51,7 +52,7 @@ export default function DailyMenuPlanner() {
           .eq('day_of_week', dayOfWeek)
           .single();
 
-        if (templateError) throw templateError;
+        if (templateError && templateError.code !== 'PGRST116') throw templateError;
 
         if (templateData) {
           setMenu(templateData);
@@ -90,9 +91,10 @@ export default function DailyMenuPlanner() {
         .upsert(
           { 
             menu_date: dateString,
-            item_breakfast: menu.item_breakfast,
-            item_lunch: menu.item_lunch,
-            item_snack: menu.item_snack,
+            item_breakfast: menu.item_breakfast || '',
+            item_lunch: menu.item_lunch || '',
+            item_snack: menu.item_snack || '',
+            item_dinner: menu.item_dinner || '', // Added dinner
           },
           { onConflict: 'menu_date' }
         );
@@ -133,7 +135,7 @@ export default function DailyMenuPlanner() {
                 <TextField
                   label="Breakfast Item"
                   name="item_breakfast"
-                  value={menu.item_breakfast}
+                  value={menu.item_breakfast || ''}
                   onChange={handleChange}
                   fullWidth
                   margin="normal"
@@ -141,7 +143,7 @@ export default function DailyMenuPlanner() {
                 <TextField
                   label="Lunch Item"
                   name="item_lunch"
-                  value={menu.item_lunch}
+                  value={menu.item_lunch || ''}
                   onChange={handleChange}
                   fullWidth
                   margin="normal"
@@ -149,7 +151,15 @@ export default function DailyMenuPlanner() {
                 <TextField
                   label="Snack Item"
                   name="item_snack"
-                  value={menu.item_snack}
+                  value={menu.item_snack || ''}
+                  onChange={handleChange}
+                  fullWidth
+                  margin="normal"
+                />
+                <TextField
+                  label="Dinner Item"
+                  name="item_dinner"
+                  value={menu.item_dinner || ''}
                   onChange={handleChange}
                   fullWidth
                   margin="normal"

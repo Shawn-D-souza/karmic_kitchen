@@ -3,7 +3,8 @@ import { supabase } from '../supabaseClient';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
   AppBar, Toolbar, Typography, Button, Box, 
-  Container, IconButton, Menu, MenuItem, Avatar
+  Container, IconButton, Menu, MenuItem, Avatar,
+  Select, FormControl, InputLabel
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; 
@@ -20,7 +21,7 @@ const employeeNav = [
 ];
 
 
-export default function AppLayout({ userProfile, children }) {
+export default function AppLayout({ userProfile, setUserProfile, children }) {
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
 
@@ -37,7 +38,30 @@ export default function AppLayout({ userProfile, children }) {
     await supabase.auth.signOut();
   };
 
+  const handleWorkLocationChange = async (event) => {
+    const newLocation = event.target.value;
+    
+    // Optimistically update UI
+    setUserProfile(prev => ({ ...prev, work_location: newLocation }));
+
+    // Update database
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('profiles')
+        .update({ work_location: newLocation })
+        .eq('id', user.id);
+      
+      if (error) throw error;
+
+    } catch (error) {
+      console.error('Error updating work location:', error.message);
+      // You could add a snackbar here to notify the user of a failed update
+    }
+  };
+
   const navItems = userProfile?.role === 'admin' ? adminNav : employeeNav;
+  const isEmployee = userProfile?.role === 'employee';
 
   return (
     <Box sx={{ display: 'flex' }}>
@@ -69,6 +93,30 @@ export default function AppLayout({ userProfile, children }) {
               </Button>
             ))}
           </Box>
+
+          {/* Work Location Dropdown for Employees */}
+          {isEmployee && (
+            <FormControl sx={{ m: 1, minWidth: 160 }} size="small">
+              <InputLabel id="work-location-label" sx={{ color: 'white' }}>Work Location</InputLabel>
+              <Select
+                labelId="work-location-label"
+                id="work-location-select"
+                value={userProfile?.work_location || 'Main Office'}
+                label="Work Location"
+                onChange={handleWorkLocationChange}
+                sx={{ 
+                  color: 'white', 
+                  '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' },
+                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
+                  '.MuiSvgIcon-root': { color: 'white' }
+                }}
+              >
+                <MenuItem value="Main Office">Main Office</MenuItem>
+                <MenuItem value="WFH">Work From Home (WFH)</MenuItem>
+                <MenuItem value="Other">Any other</MenuItem>
+              </Select>
+            </FormControl>
+          )}
 
           {/* Profile Avatar & Menu */}
           <IconButton

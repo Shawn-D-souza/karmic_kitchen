@@ -11,6 +11,8 @@ export default function AuthPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState(''); // Only for sign up
+  const [employeeId, setEmployeeId] = useState(''); // New field
+  const [mobileNumber, setMobileNumber] = useState(''); // New field
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
 
@@ -30,14 +32,19 @@ export default function AuthPage() {
         if (error) throw error;
       } else {
         // Handle Sign Up
-        // We pass full_name and a default role to the user's metadata
-        // Your SQL trigger (handle_new_user) will use this.
+        if (!email.endsWith('@karmic.co.in')) {
+          throw new Error('Registration is only allowed with a @karmic.co.in email address.');
+        }
+        
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             data: {
               full_name: fullName,
+              employee_id: employeeId,
+              mobile_number: mobileNumber,
+              work_location: 'Main Office', // Default work location
               role: 'employee', // All signups default to 'employee'
             },
           },
@@ -91,7 +98,7 @@ export default function AuthPage() {
             required
             fullWidth
             id="email"
-            label="Email Address"
+            label="Email Address (e.g., user@karmic.co.in)"
             name="email"
             autoComplete="email"
             autoFocus
@@ -111,17 +118,40 @@ export default function AuthPage() {
             onChange={(e) => setPassword(e.target.value)}
           />
           {!isLogin && (
-            <TextField
-              margin="normal"
-              required
-              fullWidth
-              id="fullName"
-              label="Full Name"
-              name="fullName"
-              autoComplete="name"
-              value={fullName}
-              onChange={(e) => setFullName(e.target.value)}
-            />
+            <>
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="fullName"
+                label="Full Name"
+                name="fullName"
+                autoComplete="name"
+                value={fullName}
+                onChange={(e) => setFullName(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="employeeId"
+                label="Employee ID"
+                name="employeeId"
+                value={employeeId}
+                onChange={(e) => setEmployeeId(e.target.value)}
+              />
+              <TextField
+                margin="normal"
+                required
+                fullWidth
+                id="mobileNumber"
+                label="Mobile Number"
+                name="mobileNumber"
+                autoComplete="tel"
+                value={mobileNumber}
+                onChange={(e) => setMobileNumber(e.target.value)}
+              />
+            </>
           )}
           <Button
             type="submit"
@@ -137,4 +167,3 @@ export default function AuthPage() {
     </Container>
   );
 }
-

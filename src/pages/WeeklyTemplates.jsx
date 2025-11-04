@@ -81,15 +81,23 @@ export default function WeeklyTemplates() {
     }));
   };
 
-  // --- FIX 1 ---
   const handleSave = async () => {
     setSaving(true);
     const currentTemplate = templates[selectedDay] || { day_of_week: selectedDay };
 
+    // Ensure all fields are at least empty strings if not set
+    const templateData = {
+      day_of_week: selectedDay,
+      item_breakfast: currentTemplate.item_breakfast || '',
+      item_lunch: currentTemplate.item_lunch || '',
+      item_snack: currentTemplate.item_snack || '',
+      item_dinner: currentTemplate.item_dinner || '', // Added dinner
+    };
+
     try {
       const { error } = await supabase
         .from('menu_templates')
-        .upsert(currentTemplate, { onConflict: 'day_of_week' });
+        .upsert(templateData, { onConflict: 'day_of_week' });
 
       if (error) throw error;
       setSnackbarMessage('Template saved successfully!');
@@ -103,7 +111,6 @@ export default function WeeklyTemplates() {
     }
   };
 
-  // --- FIX 2 ---
   const handleCloseSnackbar = () => {
     setSnackbarOpen(false);
   };
@@ -163,6 +170,14 @@ export default function WeeklyTemplates() {
                   label={`${day}'s Snack`}
                   name="item_snack"
                   value={currentData.item_snack || ''}
+                  onChange={handleFormChange}
+                  fullWidth
+                  margin="normal"
+                />
+                <TextField
+                  label={`${day}'s Dinner`}
+                  name="item_dinner"
+                  value={currentData.item_dinner || ''}
                   onChange={handleFormChange}
                   fullWidth
                   margin="normal"

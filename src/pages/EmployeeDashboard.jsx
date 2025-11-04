@@ -15,11 +15,13 @@ import { supabase } from '../supabaseClient';
 import dayjs from 'dayjs';
 
 // --- Business Rule ---
-// 9:00 PM (21:00) is the cut-off time.
-const isPastCutoff = new Date().getHours() >= 21;
+// New cut-off time: 12:30 PM
+const now = new Date();
+const isPastCutoff = now.getHours() > 12 || (now.getHours() === 12 && now.getMinutes() >= 30);
+
 
 // --- Helper Component ---
-// This component renders one of the three meal cards.
+// This component renders one of the four meal cards.
 function MealCard({
   title,
   item,
@@ -77,6 +79,7 @@ export default function EmployeeDashboard() {
     breakfast: false,
     lunch: false,
     snack: false,
+    dinner: false, // Added dinner
   });
 
   const fetchDashboardData = useCallback(async () => {
@@ -211,13 +214,13 @@ export default function EmployeeDashboard() {
 
       {isPastCutoff && (
         <Alert severity="warning" sx={{ mb: 3 }}>
-          The 9:00 PM cut-off time has passed. Selections for today are now
+          The 12:30 PM cut-off time has passed. Selections for today are now
           locked.
         </Alert>
       )}
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6} lg={3}>
           <MealCard
             title="Breakfast"
             item={menu.item_breakfast}
@@ -229,7 +232,7 @@ export default function EmployeeDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6} lg={3}>
           <MealCard
             title="Lunch"
             item={menu.item_lunch}
@@ -241,7 +244,7 @@ export default function EmployeeDashboard() {
           />
         </Grid>
 
-        <Grid item xs={12} md={4}>
+        <Grid item xs={12} md={6} lg={3}>
           <MealCard
             title="Snack"
             item={menu.item_snack}
@@ -250,6 +253,18 @@ export default function EmployeeDashboard() {
             onToggle={handleToggle}
             disabled={isPastCutoff}
             loading={saving.snack}
+          />
+        </Grid>
+
+        <Grid item xs={12} md={6} lg={3}>
+          <MealCard
+            title="Dinner"
+            item={menu.item_dinner}
+            mealType="opt_in_dinner"
+            checked={!!confirmation?.opt_in_dinner}
+            onToggle={handleToggle}
+            disabled={isPastCutoff}
+            loading={saving.dinner}
           />
         </Grid>
       </Grid>
