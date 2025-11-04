@@ -1,21 +1,21 @@
-import React, { useState, useEffect } from 'react'; // Make sure to import useEffect
+// src/layouts/AppLayout.jsx
+import React, { useState, useEffect } from 'react';
 import { supabase } from '../supabaseClient';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
   AppBar, Toolbar, Typography, Button, Box, 
   Container, IconButton, Menu, MenuItem, Avatar,
-  Select, FormControl, InputLabel
+  // --- REMOVED: Select, FormControl, InputLabel ---
 } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; 
 
 // --- SECTION 1: VAPID KEY AND HELPER FUNCTIONS ---
-
-// IMPORTANT: Replace this string with the VAPID_PUBLIC_KEY you generated
+// (This section is unchanged)
 const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_GOES_HERE';
 
-// Helper function to convert base64 string
 function urlBase64ToUint8Array(base64String) {
+  // ... (function code)
   const padding = '='.repeat((4 - base64String.length % 4) % 4);
   const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
   const rawData = window.atob(base64);
@@ -26,16 +26,12 @@ function urlBase64ToUint8Array(base64String) {
   return outputArray;
 }
 
-// Helper function to subscribe the user
 async function subscribeUserToPush() {
   try {
     const swRegistration = await navigator.serviceWorker.ready;
-    
-    // Check if user is already subscribed
     let subscription = await swRegistration.pushManager.getSubscription();
 
     if (!subscription) {
-      // Not subscribed, create a new one
       const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
       subscription = await swRegistration.pushManager.subscribe({
         userVisibleOnly: true,
@@ -43,14 +39,13 @@ async function subscribeUserToPush() {
       });
     }
 
-    // Send the subscription to our Supabase table
     const { data: { user } } = await supabase.auth.getUser();
     if (user && subscription) {
       const { error } = await supabase
         .from('push_subscriptions')
         .upsert({
           user_id: user.id,
-          subscription: subscription, // The unique subscription object
+          subscription: subscription,
         });
       if (error) throw error;
       console.log('User subscription saved to database.');
@@ -67,11 +62,11 @@ const adminNav = [
   { name: 'Dashboard', path: '/' },
   { name: 'Daily Menu', path: '/menu' }, 
   { name: 'Templates', path: '/templates' },
-  { name: 'Notifications', path: '/notifications' }, // <-- ADDED THIS LINK
+  { name: 'Notifications', path: '/notifications' },
 ];
 
 const employeeNav = [
-  { name: 'Today\'s Menu', path: '/' },
+  { name: 'Today\'s Menu', path: '/' }, // You might want to rename this to "Select Meals"
 ];
 
 
@@ -92,42 +87,19 @@ export default function AppLayout({ userProfile, setUserProfile, children }) {
     await supabase.auth.signOut();
   };
 
-  const handleWorkLocationChange = async (event) => {
-    const newLocation = event.target.value;
-    
-    // Optimistically update UI
-    setUserProfile(prev => ({ ...prev, work_location: newLocation }));
-
-    // Update database
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-      const { error } = await supabase
-        .from('profiles')
-        .update({ work_location: newLocation })
-        .eq('id', user.id);
-      
-      if (error) throw error;
-
-    } catch (error) {
-      console.error('Error updating work location:', error.message);
-      // You could add a snackbar here to notify the user of a failed update
-    }
-  };
+  // --- REMOVED: handleWorkLocationChange function ---
 
   const navItems = userProfile?.role === 'admin' ? adminNav : employeeNav;
   const isEmployee = userProfile?.role === 'employee';
 
-  // --- SECTION 2: ADD THIS useEffect HOOK ---
+  // --- SECTION 2: SIMPLIFIED useEffect HOOK ---
   useEffect(() => {
     // Only run this logic for employees
     // and only if the browser supports notifications
     if (isEmployee && 'Notification' in window && 'serviceWorker' in navigator) {
       
-      // Don't ask WFH/Other users for notifications
-      if (userProfile?.work_location === 'WFH' || userProfile?.work_location === 'Other') {
-        console.log('User is WFH/Other, not subscribing to notifications.');
-        return;
-      }
+      // --- REMOVED: WFH/Other check ---
+      // Now it will ask all employees for permission.
 
       // Check current permission status
       if (Notification.permission === 'granted') {
@@ -143,7 +115,7 @@ export default function AppLayout({ userProfile, setUserProfile, children }) {
         });
       }
     }
-  }, [isEmployee, userProfile?.work_location]); // Runs when profile loads or location changes
+  }, [isEmployee]); // --- REMOVED: userProfile?.work_location from dependencies
   // --- END OF SECTION 2 ---
 
   return (
@@ -177,30 +149,8 @@ export default function AppLayout({ userProfile, setUserProfile, children }) {
             ))}
           </Box>
 
-          {/* Work Location Dropdown for Employees */}
-          {isEmployee && (
-            <FormControl sx={{ m: 1, minWidth: 160 }} size="small">
-              <InputLabel id="work-location-label" sx={{ color: 'white' }}>Work Location</InputLabel>
-              <Select
-                labelId="work-location-label"
-                id="work-location-select"
-                value={userProfile?.work_location || 'Main Office'}
-                label="Work Location"
-                onChange={handleWorkLocationChange}
-                sx={{ 
-                  color: 'white', 
-                  '.MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255, 255, 255, 0.5)' },
-                  '&:hover .MuiOutlinedInput-notchedOutline': { borderColor: 'white' },
-                  '.MuiSvgIcon-root': { color: 'white' }
-                }}
-              >
-                <MenuItem value="Main Office">Main Office</MenuItem>
-                <MenuItem value="WFH">Work From Home (WFH)</MenuItem>
-                <MenuItem value="Other">Any other</MenuItem>
-              </Select>
-            </FormControl>
-          )}
-
+          {/* --- REMOVED: Work Location Dropdown for Employees --- */}
+          
           {/* Profile Avatar & Menu */}
           <IconButton
             size="large"
