@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.netlify.karmic_kitchen.twa",
+    "sha256_cert_fingerprints":
+    ["FE:B7:59:72:5F:7E:25:8C:AD:EC:A8:09:C7:EA:6E:AE:5D:E9:D3:71:15:E0:39:83:D2:97:27:E5:C5:E1:64:EB"]
+  }
+}]
