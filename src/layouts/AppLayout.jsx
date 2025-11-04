@@ -57,16 +57,15 @@ async function subscribeUserToPush() {
 // --- END OF SECTION 1 ---
 
 
-// Updated Admin Navigation
+// --- UPDATED Admin Navigation ---
 const adminNav = [
   { name: 'Dashboard', path: '/' },
   { name: 'Daily Menu', path: '/menu' }, 
   { name: 'Templates', path: '/templates' },
-  { name: 'Notifications', path: '/notifications' },
 ];
 
 const employeeNav = [
-  { name: 'Today\'s Menu', path: '/' }, // You might want to rename this to "Select Meals"
+  { name: 'Select Meals', path: '/' }, // Renamed this for clarity
 ];
 
 

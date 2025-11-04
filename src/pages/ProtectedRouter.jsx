@@ -6,10 +6,9 @@ import AdminDashboard from './AdminDashboard';
 import EmployeeDashboard from './EmployeeDashboard';
 import LoadingScreen from '../components/LoadingScreen';
 
-// Import the new Admin pages
+// Import the Admin pages
 import DailyMenuPlanner from './DailyMenuPlanner';
 import WeeklyTemplates from './WeeklyTemplates';
-import AdminNotifications from './AdminNotifications'; // <-- ADD THIS IMPORT
 
 function ProtectedRouter({ session }) {
   const [profile, setProfile] = useState(null);
@@ -23,7 +22,8 @@ function ProtectedRouter({ session }) {
       try {
         const { data, error, status } = await supabase
           .from('profiles')
-          .select('role, full_name, email, work_location') // Added work_location
+          // Removed work_location since we are not using it
+          .select('role, full_name, email') 
           .eq('id', user.id)
           .single();
 
@@ -48,7 +48,6 @@ function ProtectedRouter({ session }) {
     return <LoadingScreen />;
   }
 
-  // Pass the full profile (including work_location) and updater to AppLayout
   return (
     <AppLayout userProfile={profile} setUserProfile={setProfile}>
       <Routes>
@@ -58,7 +57,7 @@ function ProtectedRouter({ session }) {
             <Route path="/" element={<AdminDashboard />} />
             <Route path="/menu" element={<DailyMenuPlanner />} />
             <Route path="/templates" element={<WeeklyTemplates />} />
-            <Route path="/notifications" element={<AdminNotifications />} /> {/* <-- ADD THIS ROUTE */}
+            {/* <Route path="/notifications" element={<AdminNotifications />} /> */} {/* <-- REMOVED THIS ROUTE */}
           </>
         ) : (
           <>
