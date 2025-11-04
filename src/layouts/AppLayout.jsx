@@ -12,7 +12,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 
 // --- SECTION 1: VAPID KEY AND HELPER FUNCTIONS ---
 // (This section is unchanged)
-const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_GOES_HERE';
+const VAPID_PUBLIC_KEY = 'BG2Svf_sLG0LXUNEWDBza1h-CuyMKwtmCLVuhy7dS3XK1vJcmLjWovJbVpBQSyb_MSBdPURNUTT6C9zVm5rTmHo';
 
 function urlBase64ToUint8Array(base64String) {
   // ... (function code)

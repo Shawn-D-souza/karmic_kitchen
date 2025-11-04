@@ -17,7 +17,18 @@ const supabaseAdmin = createClient(
   Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
 );
 
+// --- ADD THESE HEADERS ---
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*', // Or your specific website URL for better security
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+};
+
 Deno.serve(async (req) => {
+  // --- Respond to OPTIONS preflight request (for CORS) ---
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders });
+  }
+
   try {
     // Get the custom message from the admin
     const { message } = await req.json();
@@ -43,9 +54,15 @@ Deno.serve(async (req) => {
     await Promise.all(broadcastPromises);
 
     return new Response(JSON.stringify({ message: `Sent broadcast to ${subscriptions.length} users.` }), {
+      // --- ADD HEADERS TO SUCCESS RESPONSE ---
       status: 200,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+    return new Response(JSON.stringify({ error: error.message }), { 
+      // --- ADD HEADERS TO ERROR RESPONSE ---
+      status: 500,
+      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 });
