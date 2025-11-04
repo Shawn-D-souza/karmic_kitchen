@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react'; // Make sure to import useEffect
 import { supabase } from '../supabaseClient';
 import { Link as RouterLink } from 'react-router-dom';
 import { 
@@ -9,11 +9,65 @@ import {
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu'; 
 
+// --- SECTION 1: VAPID KEY AND HELPER FUNCTIONS ---
+
+// IMPORTANT: Replace this string with the VAPID_PUBLIC_KEY you generated
+const VAPID_PUBLIC_KEY = 'YOUR_VAPID_PUBLIC_KEY_GOES_HERE';
+
+// Helper function to convert base64 string
+function urlBase64ToUint8Array(base64String) {
+  const padding = '='.repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+// Helper function to subscribe the user
+async function subscribeUserToPush() {
+  try {
+    const swRegistration = await navigator.serviceWorker.ready;
+    
+    // Check if user is already subscribed
+    let subscription = await swRegistration.pushManager.getSubscription();
+
+    if (!subscription) {
+      // Not subscribed, create a new one
+      const applicationServerKey = urlBase64ToUint8Array(VAPID_PUBLIC_KEY);
+      subscription = await swRegistration.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: applicationServerKey,
+      });
+    }
+
+    // Send the subscription to our Supabase table
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user && subscription) {
+      const { error } = await supabase
+        .from('push_subscriptions')
+        .upsert({
+          user_id: user.id,
+          subscription: subscription, // The unique subscription object
+        });
+      if (error) throw error;
+      console.log('User subscription saved to database.');
+    }
+  } catch (error) {
+    console.error('Failed to subscribe user to push notifications:', error);
+  }
+}
+// --- END OF SECTION 1 ---
+
+
 // Updated Admin Navigation
 const adminNav = [
   { name: 'Dashboard', path: '/' },
   { name: 'Daily Menu', path: '/menu' }, 
   { name: 'Templates', path: '/templates' },
+  { name: 'Notifications', path: '/notifications' }, // <-- ADDED THIS LINK
 ];
 
 const employeeNav = [
@@ -62,6 +116,35 @@ export default function AppLayout({ userProfile, setUserProfile, children }) {
 
   const navItems = userProfile?.role === 'admin' ? adminNav : employeeNav;
   const isEmployee = userProfile?.role === 'employee';
+
+  // --- SECTION 2: ADD THIS useEffect HOOK ---
+  useEffect(() => {
+    // Only run this logic for employees
+    // and only if the browser supports notifications
+    if (isEmployee && 'Notification' in window && 'serviceWorker' in navigator) {
+      
+      // Don't ask WFH/Other users for notifications
+      if (userProfile?.work_location === 'WFH' || userProfile?.work_location === 'Other') {
+        console.log('User is WFH/Other, not subscribing to notifications.');
+        return;
+      }
+
+      // Check current permission status
+      if (Notification.permission === 'granted') {
+        console.log('Notification permission already granted.');
+        subscribeUserToPush();
+      } else if (Notification.permission !== 'denied') {
+        // If not granted or denied, ask for permission
+        Notification.requestPermission().then(permission => {
+          if (permission === 'granted') {
+            console.log('Notification permission granted.');
+            subscribeUserToPush();
+          }
+        });
+      }
+    }
+  }, [isEmployee, userProfile?.work_location]); // Runs when profile loads or location changes
+  // --- END OF SECTION 2 ---
 
   return (
     <Box sx={{ display: 'flex' }}>

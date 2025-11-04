@@ -9,6 +9,7 @@ import LoadingScreen from '../components/LoadingScreen';
 // Import the new Admin pages
 import DailyMenuPlanner from './DailyMenuPlanner';
 import WeeklyTemplates from './WeeklyTemplates';
+import AdminNotifications from './AdminNotifications'; // <-- ADD THIS IMPORT
 
 function ProtectedRouter({ session }) {
   const [profile, setProfile] = useState(null);
@@ -57,6 +58,7 @@ function ProtectedRouter({ session }) {
             <Route path="/" element={<AdminDashboard />} />
             <Route path="/menu" element={<DailyMenuPlanner />} />
             <Route path="/templates" element={<WeeklyTemplates />} />
+            <Route path="/notifications" element={<AdminNotifications />} /> {/* <-- ADD THIS ROUTE */}
           </>
         ) : (
           <>
