@@ -12,11 +12,14 @@ const initialMenu = {
   item_breakfast: '',
   item_lunch: '',
   item_snack: '',
-  item_dinner: '', // Added dinner
+  item_dinner: '', 
 };
 
 export default function DailyMenuPlanner() {
-  const [selectedDate, setSelectedDate] = useState(dayjs());
+  // This line already fulfills your first request:
+  // It initializes the date to the current day.
+  const [selectedDate, setSelectedDate] = useState(dayjs()); 
+  
   const [menu, setMenu] = useState(initialMenu);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -55,7 +58,10 @@ export default function DailyMenuPlanner() {
         if (templateError && templateError.code !== 'PGRST116') throw templateError;
 
         if (templateData) {
-          setMenu(templateData);
+          // ** IMPROVEMENT **
+          // Merge template with initialMenu to ensure no null fields
+          // This pre-fills the form so the admin can "directly save that thing"
+          setMenu({ ...initialMenu, ...templateData });
           setMessage({ type: 'info', text: `No daily menu found. Pre-filled from ${date.format('dddd')}'s template.` });
         } else {
           setMenu(initialMenu);
@@ -94,7 +100,7 @@ export default function DailyMenuPlanner() {
             item_breakfast: menu.item_breakfast || '',
             item_lunch: menu.item_lunch || '',
             item_snack: menu.item_snack || '',
-            item_dinner: menu.item_dinner || '', // Added dinner
+            item_dinner: menu.item_dinner || '', 
           },
           { onConflict: 'menu_date' }
         );
@@ -132,6 +138,10 @@ export default function DailyMenuPlanner() {
               </Box>
             ) : (
               <Box component="form" noValidate>
+                {/* ** IMPROVEMENT **
+                    Using 'value || ""' prevents React uncontrolled/controlled
+                    input warnings and ensures the fields are never null.
+                */}
                 <TextField
                   label="Breakfast Item"
                   name="item_breakfast"
