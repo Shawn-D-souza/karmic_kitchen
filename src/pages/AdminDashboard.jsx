@@ -25,7 +25,6 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import dayjs from 'dayjs';
 import { supabase } from '../supabaseClient';
 
-// Larger meal cards
 function MealCountCard({ title, icon, count, loading }) {
   return (
     <Card sx={{ borderRadius: 4, display: 'flex', flexDirection: 'column', justifyContent: 'center', height: 200, width: '100%' }}>
@@ -98,6 +97,30 @@ export default function AdminDashboard() {
     fetchCounts();
   }, [fetchCounts]);
 
+  useEffect(() => {
+    const dateString = dayjs(selectedDate).format('YYYY-MM-DD');
+
+    const channel = supabase
+      .channel(`confirmations-realtime-${dateString}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*', 
+          schema: 'public',
+          table: 'confirmations',
+          filter: `menu_date=eq.${dateString}`,
+        },
+        () => {
+          fetchCounts();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedDate, fetchCounts]);
+
   const total =
     counts.breakfast + counts.lunch + counts.snack + counts.dinner;
 
@@ -115,15 +138,6 @@ export default function AdminDashboard() {
           }
           title={<Typography variant="h5" sx={{ fontWeight: 700 }}>Admin Dashboard</Typography>}
           subheader="Meal confirmations overview"
-          action={
-            <Tooltip title="Refresh">
-              <span>
-                <IconButton onClick={fetchCounts} disabled={loading}>
-                  <RefreshIcon />
-                </IconButton>
-              </span>
-            </Tooltip>
-          }
         />
         <Divider />
         <CardContent>
