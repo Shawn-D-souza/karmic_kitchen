@@ -56,7 +56,6 @@ export default function AdminDashboard() {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [lastUpdated, setLastUpdated] = useState(null);
 
   const fetchCounts = useCallback(async () => {
     setLoading(true);
@@ -83,7 +82,6 @@ export default function AdminDashboard() {
       );
 
       setCounts(totals);
-      setLastUpdated(new Date());
     } catch (err) {
       console.error('Error fetching confirmation counts:', err?.message || err);
       setError('Could not load counts. Please try again.');
@@ -105,7 +103,7 @@ export default function AdminDashboard() {
       .on(
         'postgres_changes',
         {
-          event: '*', 
+          event: '*',
           schema: 'public',
           table: 'confirmations',
           filter: `menu_date=eq.${dateString}`,
@@ -120,9 +118,6 @@ export default function AdminDashboard() {
       supabase.removeChannel(channel);
     };
   }, [selectedDate, fetchCounts]);
-
-  const total =
-    counts.breakfast + counts.lunch + counts.snack + counts.dinner;
 
   return (
     <Box sx={{ p: { xs: 2, md: 4 } }}>
@@ -157,15 +152,8 @@ export default function AdminDashboard() {
                 },
               }}
             />
-            <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
-              <Chip label={`Total: ${total}`} />
-              {lastUpdated ? (
-                <Chip
-                  variant="outlined"
-                  label={`Updated: ${dayjs(lastUpdated).format('HH:mm:ss')}`}
-                />
-              ) : null}
-            </Stack>
+
+            {/* Removed total + lastUpdated chips */}
           </Stack>
           {error ? (
             <Box sx={{ mt: 2 }}>
